@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Film List</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+<!--    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.17.1/dist/bootstrap-table.min.css">-->
+    <link href="https://unpkg.com/bootstrap-table@1.21.2/dist/bootstrap-table.min.css" rel="stylesheet">
+    <!--    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/foundation-sites@6.5.3/dist/css/foundation.min.css" integrity="sha256-xpOKVlYXzQ3P03j397+jWFZLMBXLES3IiryeClgU5og= sha384-gP4DhqyoT9b1vaikoHi9XQ8If7UNLO73JFOOlQV1RATrA7D0O7TjJZifac6NwPps sha512-AKwIib1E+xDeXe0tCgbc9uSvPwVYl6Awj7xl0FoaPFostZHOuDQ1abnDNCYtxL/HWEnVOMrFyf91TDgLPi9pNg==" crossorigin="anonymous">-->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"
+          integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+    <!--    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.21.2/dist/themes/foundation/bootstrap-table-foundation.min.css">-->
+
+    <script src="https://code.jquery.com/jquery-3.6.3.js"
+            integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM=" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="editModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Film</h5>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input type="text" class="form-control" id="title" name="title">
+                    </div>
+                    <div class="form-group">
+                        <label for="year">Year</label>
+                        <input type="number" class="form-control" id="year" name="year">
+                    </div>
+                    <div class="form-group">
+                        <label for="director">Director</label>
+                        <input type="text" class="form-control" id="director" name="director">
+                    </div>
+                    <div class="form-group">
+                        <label for="stars">Stars</label>
+                        <input type="text" class="form-control" id="stars" name="stars">
+                    </div>
+                    <div class="form-group">
+                        <label for="review">Review</label>
+                        <textarea class="form-control" id="review" name="review"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="saveChangesBtn">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<nav id="navbar" class="navbar navbar-default">
+    <div id="container-fluid" class="container-fluid">
+        <div id="navbar-header" class="navbar-header">
+            <a class="navbar-brand">FilmBase</a>
+        </div>
+        <form id="search-form">
+            <label for="search-input">Search API</label>
+            <input name="search-input" type="text" id="search-input" autocomplete="off">
+            <div id="search-results"></div>
+        </form>
+    </div>
+</nav>
+
+<div id="results"></div>
+<div class="container mt-5">
+    <h1>Film List</h1>
+    <div id="filmList">
+        <form>
+            <label for="format-select">Select format:</label><br>
+            <select id="format-select">
+                <option value="json">JSON</option>
+                <option value="xml">XML</option>
+                <option value="text">Plain text</option>
+            </select>
+        </form>
+    </div>
+    <button id="toggle-pagination" class="btn btn-primary" style="background-color: #0d6efd" onclick="togglePagination()">Toggle Pagination</button>
+    <button type="button" class="btn btn-primary" id="addBtn">Add Movie</button>
+
+    <table id="filmTable" class="table"></table>
+    <table class="film-table"></table>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/foundation-sites@6.5.3/dist/js/foundation.min.js" integrity="sha256-/PFxCnsMh+nTuM0k3VJCRch1gwnCfKjaP8rJNq5SoBg= sha384-9ksAFjQjZnpqt6VtpjMjlp2S0qrGbcwF/rvrLUg2vciMhwc1UJJeAAOLuJ96w+Nj sha512-UMSn6RHqqJeJcIfV1eS2tPKCjzaHkU/KqgAnQ7Nzn0mLicFxaVhm9vq7zG5+0LALt15j1ljlg8Fp9PT1VGNmDw==" crossorigin="anonymous"></script>-->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.17.1/dist/bootstrap-table.min.js"></script>-->
+<script src="https://unpkg.com/bootstrap-table@1.21.2/dist/bootstrap-table.min.js"></script>
+<script src="client.js"></script>
+<!--<script src="https://unpkg.com/bootstrap-table@1.21.2/dist/themes/foundation/bootstrap-table-foundation.min.js"></script>-->
+</body>
+</html>
