@@ -10,7 +10,7 @@ $("#format-select").change(function() {
 function xml2json(xml) {
     // 'root' object in the comments refers to the object defined below ('obj')
     // since this function is called recursively, it may not be the actual root
-    // of the linked list  😊
+    // of the linked list 😊
 
     // Create the return object
     let obj = {};
@@ -55,8 +55,39 @@ function xml2json(xml) {
     return obj;
 }
 
+// JSON to XML
 
-function getFilms() {
+function json2xml(data) {
+    let xml = new XMLSerializer().serializeToString(new DOMParser().parseFromString('<film />', 'application/xml'));
+    let parser = new DOMParser();
+    let xmlDoc = parser.parseFromString(xml, "application/xml");
+
+    for (let key in data) {
+        if (data.hasOwnProperty(key)) {
+            let newElement = xmlDoc.createElement(key);
+            let newText = xmlDoc.createTextNode(data[key]);
+            newElement.appendChild(newText);
+            xmlDoc.documentElement.appendChild(newElement);
+        }
+    }
+    return new XMLSerializer().serializeToString(xmlDoc);
+}
+function text2json(data) {
+    return JSON.parse(data);
+}
+
+// add comma delimiters between objects
+function json2text(data) {
+    if (data.id === undefined) {
+        console.log(data.id + " is undefined")
+        return data.title + "," + data.year + "," + data.director + "," + data.stars + "," + data.review;
+    } else {
+        console.log(data.id + " is defined")
+        return data.id + "," + data.title + "," + data.year + "," + data.director + "," + data.stars + "," + data.review;
+        }
+}
+
+function getData() {
     let format = $("#format-select").val();
     let url = apiUrlBase + "?format=" + format;
     let dataType;
@@ -90,10 +121,58 @@ function getFilms() {
     });
 }
 
+function sendData(data, type, mapping) {
+    let format = $("#format-select").val();
+    console.log(format);
+    let url = apiUrlBase + "?format=" + format;
+    let dataType;
+    let contentType;
+    let mimeType;
+    let acceptHeaders = {};
+
+    switch (format) {
+        case "json":
+            console.log("json");
+            url = apiUrlBase + mapping + "?format=" + format;
+            data = JSON.stringify(data);
+            dataType = "json";
+            contentType = "application/json";
+            mimeType = "application/json";
+            acceptHeaders = {"Accept":"application/json"};
+            break;
+        case "xml":
+            console.log("xml");
+            url = apiUrlBase + mapping + "?format=" + format;
+            data = json2xml(data);
+            dataType = "xml";
+            contentType = "application/xml";
+            mimeType = "application/xml";
+            acceptHeaders = {"Accept":"application/xml"};
+            break;
+        case "text":
+            url = apiUrlBase + mapping + "?format=" + format;
+            data = json2text(data);
+            dataType = "text";
+            contentType = "text/plain";
+            mimeType = "text/plain";
+            $.ajaxSettings.headers = {"Accept":"text/plain"};
+            break;
+    }
+
+    return $.ajax({
+        url: url,
+        type: type,
+        data: data,
+        dataType: dataType,
+        contentType: contentType,
+        mimeType: mimeType,
+    });
+}
+
 // function refreshTable(data) {
 //     // if request format is JSON, refresh the table
 //     if (data.format === "json") {
-//         let json = getFilms()
+//         let json = getData()
 //         $('#filmTable').bootstrapTable('refresh');
 //     }
 //     // if request format is XML, transform it to JSON and refresh the table
@@ -104,31 +183,65 @@ function getFilms() {
 //
 // }
 
-$(document).on('click', '.delete-btn', function() {
-    let format = $("#format-select").val();
-    let filmId = $(this).val();
-    let index = $(this).closest('tr').data('index');
-    console.log(index)
+// $(document).on('click', '.delete-btn', function() {
+//     let format = $("#format-select").val();
+//     let filmId = $(this).val();
+//     let index = $(this).closest('tr').data('index');
+//     console.log(index)
+//     if (confirm("Are you sure you want to delete this film?")) {
+//         $(this).closest('tr').animate({borderColor: "#7c2d2d"}, "fastest")
+//             .animate({opacity: "hide"}, "fast", function() {
+//                 $.ajax({
+//                     url: '/films/' + filmId,
+//                     type: 'DELETE',
+//                     success: function() {
+//                         // refresh the table
+//                         $('#filmTable').bootstrapTable('remove', {
+//                             field: '$index',
+//                             values: [index]
+//                         });
+//                     }
+//                 });
+//             });
+//     }
+// });
+
+// $(document).on('click', '.delete-btn', function() {
+function deleteing(row) {
+    let filmId = row.val();
+    let index = row.closest('tr').data('index');
     if (confirm("Are you sure you want to delete this film?")) {
-        $(this).closest('tr').animate({borderColor: "#ff0000"}, "fastest")
-            .animate({opacity: "hide"}, "fast", function() {
-                $.ajax({
-                    url: '/films/' + filmId,
-                    type: 'DELETE',
-                    success: function() {
-                        // refresh the table
-                        $('#filmTable').bootstrapTable('remove', {
-                            field: '$index',
-                            values: [index]
-                        });
-                    }
+        row.closest('tr').animate({borderColor: "#ff0000"}, "fastest")
+            .animate({opacity: "hide"}, "fast", function () {
+                sendData({}, "DELETE", `/${filmId}`).done(function () {
+                    // refresh the table
+                    $('#filmTable').bootstrapTable('remove', {
+                        field: '$index',
+                        values: [index]
+                    });
                 });
             });
     }
-});
 
-$(document).on('click', '.edit-btn', function() {
-    // Populate the inputs with the data from the row
+
+
+    // if (confirm("Are you sure you want to delete this film?")) {
+    //     sendData({}, "DELETE", `/${filmId}`).done(function() {
+    //         $(this).closest('tr').animate({borderColor: "#7c2d2d"}, "fastest")
+    //             .animate({opacity: "hide"}, "fast", function() {
+    //                 // refresh the table
+    //                 $('#filmTable').bootstrapTable('remove', {
+    //                     field: '$index',
+    //                     values: [index]
+    //                 });
+    //             });
+    //     });
+    // }
+}
+
+
+// .edit-btn on click
+$(document).off("click").on('click', '.edit-btn', function() {
     let filmId = $(this).val();
     let filmTitle = $(this).closest('tr').find('td:nth-child(2)').text();
     let filmYear = $(this).closest('tr').find('td:nth-child(3)').text();
@@ -136,33 +249,39 @@ $(document).on('click', '.edit-btn', function() {
     let filmStars = $(this).closest('tr').find('td:nth-child(5)').text();
     let filmReview = $(this).closest('tr').find('td:nth-child(6)').text();
 
-    $('#editModal').modal('show');
+    // Populate the inputs with the data from the row
+    $('#editModal .modal-title').text("Edit Movie");
+    $('#editModal #editAddBtn').text("Edit Movie");
     $('#title').val(filmTitle);
     $('#year').val(filmYear);
     $('#director').val(filmDirector);
     $('#stars').val(filmStars);
     $('#review').val(filmReview);
+    $('#editModal').modal('show');
 
-    $('#saveChangesBtn').on('click').click(function() {
-        let updatedFilm = JSON.stringify({
+    $('#editForm').off("submit").submit(function (event) {
+        event.preventDefault();
+        let updatedFilm = {
             "id": filmId,
             "title": $('#title').val(),
             "year": $('#year').val(),
             "director": $('#director').val(),
             "stars": $('#stars').val(),
             "review": $('#review').val()
-        });
+        }
         console.log(updatedFilm);
 
-        $.ajax({
-            url: apiUrlBase + "/" + filmId,
-            type: 'PUT',
-            data: updatedFilm,
-            contentType: "application/json",
-            dataType: "json",
-            accept: "/",
-            mimeType: "/",
-        }).done( function () {
+        //  check if format is text, if it is add text to url
+        let format = $("#format-select").val();
+        console.log(format)
+        let newUrl = "";
+        if (format === "text") {
+            newUrl = "/text/" + filmId;
+        } else {
+            newUrl = "/" + filmId;
+        }
+        console.log(newUrl)
+        sendData(updatedFilm, "PUT", newUrl).done(function () {
             $('#editModal').modal('hide');
             // refresh the table
             $('#filmTable').bootstrapTable('refresh')
@@ -170,73 +289,93 @@ $(document).on('click', '.edit-btn', function() {
     });
 });
 
+// $(document).on('click', '#add-btn', function() {
+$('#add-btn').off("click").click(function() {
+    $('#editModal .modal-title').text("Add Film");
+    $('#editModal #saveChangesBtn').text("Add Film")
+    $("#editForm")[0].reset();
+    $("#editModal").modal("show");
 
-
-// on page load call displayFilms
-$(document).ready(function() {
-    // Display films in table
-    displayFilms();
-
-    // Add click event handler for "Add Movie" button
-    $('#addBtn').click(function() {
-        // Clear form in modal
-        $('#editForm')[0].reset();
-        $('#editModal .modal-title').text("Add Movie");
-        // Show modal
-        $('#editModal').modal('show');
-    });
-
-
-    // Add submit event handler for form in modal
-    $('#editForm').submit(function(event) {
-        // Prevent form submission
-        event.preventDefault();
-
-        // Get film data from form
+    $('#editForm').off("submit").on('submit',function(event) {
+        event.preventDefault()
         let filmData = {
-            id: $('#editForm #id').val(),
             title: $('#editForm #title').val(),
             year: $('#editForm #year').val(),
             director: $('#editForm #director').val(),
             stars: $('#editForm #stars').val(),
             review: $('#editForm #review').val()
         };
-        if ($('#editModal .modal-title').text() === "Add Movie") {
-        filmData.id.destroy()
-        }
-        console.log(filmData);
-
-        // Send AJAX request to server to add or update film
-        let url, method;
-        if (filmData.id) {
-            // Update existing film
-            url = apiUrlBase + filmData.id;
-            method = 'PUT';
-        } else {
-            // Add new film
-            url = apiUrlBase;
-            method = 'POST';
-        }
-        $.ajax({
-            url: url,
-            method: method,
-            data: filmData,
-            success: function(data) {
-                // Refresh table to display added/updated film
-                $('#filmTable').bootstrapTable('refresh');
-
-                // Hide modal
-                $('#editModal').modal('hide');
-            }
+        sendData(filmData, "POST", "").done(function() {
+            // Refresh table to display added/updated film
+            $('#filmTable').bootstrapTable('refresh');
+            // Hide modal
+            $('#editModal').modal('hide');
         });
     });
+});
+// on page load call displayFilms
+$(document).ready(function() {
+    // Display films in table
+    displayFilms();
+
+    // // Add click event handler for "Add Movie" button
+    // $('#addBtn').click(function() {
+    //     // Clear form in modal
+    //     $('#editForm')[0].reset();
+    //     $('#editModal .modal-title').text("Add Movie");
+    //     $('#editModal #saveChangesBtn').text("Add Movie")
+    //     // Show modal
+    //     $('#editModal').modal('show');
+    // });
+    //
+    //
+    // // Add submit event handler for form in modal
+    // $('#editForm').submit(function(event) {
+    //     // Prevent form submission
+    //     event.preventDefault();
+    //     // Get film data from form
+    //     let filmData = {
+    //         id: $('#editForm #id').val(),
+    //         title: $('#editForm #title').val(),
+    //         year: $('#editForm #year').val(),
+    //         director: $('#editForm #director').val(),
+    //         stars: $('#editForm #stars').val(),
+    //         review: $('#editForm #review').val()
+    //     };
+    //
+    //     // Send AJAX request to server to add or update film
+    //     let url, method;
+    //     if (filmData.id) {
+    //         // Update existing film
+    //         url = apiUrlBase + filmData.id;
+    //         method = 'PUT';
+    //     } else {
+    //         // Add new film
+    //         url = apiUrlBase;
+    //         method = 'POST';
+    //     }
+    //     $.ajax({
+    //         url: url,
+    //         method: method,
+    //         data: JSON.stringify(filmData),
+    //         contentType: "application/json",
+    //         dataType: "json",
+    //         success: function() {
+    //             // Refresh table to display added/updated film
+    //             $('#filmTable').bootstrapTable('refresh');
+    //
+    //             // Hide modal
+    //             $('#editModal').modal('hide');
+    //         }
+    //     });
+    // });
 });
 
 
 
 function displayFilms() {
-    getFilms().then(function(films) {
-        // console.log(films);
+    getData().then(function(films) {
+        console.log(films);
         $('#filmTable').bootstrapTable({
             data: films,
             columns: [{
@@ -265,7 +404,7 @@ function displayFilms() {
                 sortable: true
             }, {
                 formatter: function(value, row, index) {
-                    return '<button class="btn btn-danger btn-sm delete-btn" value="' + row.id + '">Delete</button> ' +
+                    return '<button onclick="deleteing($(this))" class="btn btn-danger btn-sm delete-btn" value="' + row.id + '">Delete</button> ' +
                         '<button class="btn btn-primary btn-sm edit-btn" value="' + row.id + '">Edit</button>';
                 }
             }],
@@ -281,24 +420,29 @@ function displayFilms() {
             sortOrder: 'asc',
         })
             .on('refresh.bs.table', function() {
-             getFilms().done(function(films) {
-                 if ($("#format-select").val() === "xml") {
+             getData().done(function(films) {
+                 let format = $("#format-select").val();
+                 if (format === "text") {
+                     $('#filmTable').bootstrapTable('refreshOptions', {
+                         data:JSON.parse(films)
+                     })
+                }
+                else if (format === "xml") {
                      $('#filmTable').bootstrapTable('refreshOptions', {
                          // List has only one item which held all the film objects, which is why xml2json is used on it.
                          data: xml2json(films)["List"].item
                      })
-                 }
-                 else if ($("#format-select").val() === "json") {
+                }
+                else if (format === "json") {
                      $('#filmTable').bootstrapTable('refreshOptions', {
                          data: films
                      })
-                 } else {
+                } else {
                      console.log(films);
                      $('#filmTable').bootstrapTable('refreshOptions', {
                          data: JSON.parse(films)
                      })
-                 }
-
+                }
              });
         });
     }).fail(function(error) {
@@ -318,6 +462,16 @@ $("#search-form").on("mouseleave", function() {
 function togglePagination() {
     $('#filmTable').bootstrapTable('togglePagination');
 }
+
+// very nested, very ugly, very sorry, but it works
+// Queries the api for films based on entered characters, problem on the backend is that
+// if using numeric characters it only looks in the id and year columns, not title
+// sends a query to the api with the search term 300ms after a character has been entered
+// when a shown result is clicked it redirects to a IMDB search for that film
+// didn't use the API since some films in the database either did not exist
+// or did not have the correct data and could not be found on IMDB
+// uses 3rd party API to get the poster for the film if available
+// if not available, alt tag is empty since it would just display the name movie twice
 $(document).ready(function() {
     let timeout;
     $("#search-input").keyup(function() {
@@ -338,8 +492,7 @@ $(document).ready(function() {
                             let urlTitle = encodeURIComponent(film.title + " " + film.year);
                             searchResults += "<li><img src=" + poster+">";
                             searchResults += "<a target='_blank' href=https://www.imdb.com/find?q=" + urlTitle + ">" + film.title +  "</a></li>";
-                            console.log(film.title)
-                            $("#search-results").html("<ul>" + searchResults + "</ul>").show().slideDown().fadeIn();;
+                            $("#search-results").html("<ul>" + searchResults + "</ul>").show().slideDown().fadeIn();
                         });
                     });
                 });
@@ -479,6 +632,6 @@ function getFilmPoster(title, year) {
 //                 // refresh the table
 //                 $('#filmTable').bootstrapTable('refresh');
 //             }
-//         }).then(getFilms);
+//         }).then(getData);
 //     });
 // });

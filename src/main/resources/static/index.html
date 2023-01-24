@@ -47,10 +47,10 @@
                         <label for="review">Review</label>
                         <textarea class="form-control" id="review" name="review"></textarea>
                     </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary" id="editAddBtn">Save changes</button>
+                    </div>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="saveChangesBtn">Save changes</button>
             </div>
         </div>
     </div>
@@ -83,7 +83,7 @@
         </form>
     </div>
     <button id="toggle-pagination" class="btn btn-primary" style="background-color: #0d6efd" onclick="togglePagination()">Toggle Pagination</button>
-    <button type="button" class="btn btn-primary" id="addBtn">Add Movie</button>
+    <button type="button" class="btn btn-primary" id="add-btn">Add Movie</button>
 
     <table id="filmTable" class="table"></table>
     <table class="film-table"></table>
